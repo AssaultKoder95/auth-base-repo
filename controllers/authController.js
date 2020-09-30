@@ -1,4 +1,11 @@
+const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
+
+const signToken = id => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN
+    });
+}
 
 // @desc    SIGNUP FOR NEW USER
 // @route   POST /ap1/v1/users/signup
@@ -12,8 +19,11 @@ exports.signup = async (req, res, next) => {
             passwordConfirm: req.body.passwordConfirm
         });
 
+        const token = signToken(newUser._id);
+
         return res.status(201).json({
             success: true,
+            token,
             data: newUser
         })
 
@@ -61,8 +71,11 @@ exports.login = async (req, res, next) => {
             })
         }
 
+        const token = signToken(user._id);
+
         return res.status(200).json({
-            success: true
+            success: true,
+            token
         })
 
     } catch (err) {
