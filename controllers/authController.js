@@ -37,3 +37,38 @@ exports.signup = async (req, res, next) => {
         }) 
     }
 }
+
+// @desc    LOGIN FOR USER
+// @route   POST /api/v1/users/login
+// @access  PUBLIC
+exports.login = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+
+        if(!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Please provide email and password'
+            })
+        }
+
+        const user = await User.findOne({ email });
+
+        if(!user || password!==user.password) {
+            return res.status(401).json({
+                success: false,
+                error: 'Incorrect email or password'
+            })
+        }
+
+        return res.status(200).json({
+            success: true
+        })
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: 'Server Error'
+        }) 
+    }
+}
