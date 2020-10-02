@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const colors = require('colors');
 
-const userRoutes = require('./routes/userRoutes');
+const userRouter = require('./routes/userRoutes');
 const connectDB = require('./config/db');
 
 dotenv.config({ path: './config/config.env'});
@@ -12,13 +12,23 @@ connectDB();
 
 const app = express();
 
+
+// MIDDLEWARES
 if(process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
 app.use(express.json());
 
-app.use('/api/v1/users', userRoutes);
+app.use((req, res, next) => {
+    req.requestTime = new Date().toISOString();
+    //console.log(req.headers);
+    next();
+});
+
+
+// ROUTES
+app.use('/api/v1/users', userRouter);
 
 const PORT = process.env.PORT || 5000;
 

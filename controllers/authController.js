@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 const User = require('../models/UserModel');
 
 const signToken = id => {
@@ -83,5 +84,52 @@ exports.login = async (req, res, next) => {
             success: false,
             error: 'Server Error'
         }) 
+    }
+}
+
+exports.protect = async (req, res, next) => {
+    try {
+        let token;
+        if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+    
+        //console.log(token);
+    
+        if(!token) {
+            return res.status(401).json({
+                success: false,
+                error: 'You are not logged in! Log in to get access'
+            }) 
+        }
+    
+        const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+        //console.log(decoded);
+
+        const currentUser = await User.findById(decoded.id);
+
+        if(!currentUser) {
+            return res.status(401).json({
+                success: false,
+                error: 'The user belonging to this token do not exist anymore.'
+            }) 
+        }
+
+        req.user = currentUser;
+        next();
+        
+    } catch (err) {
+        if(err.name === 'JsonWebTokenError'){
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid Token! Log in again.'
+            })
+        }
+        if(err.name === 'TokenExpiredError'){
+            return res.status(401).json({
+                success: false,
+                error: 'Token Expired! Log in again.'
+            })
+        }
     }
 }
